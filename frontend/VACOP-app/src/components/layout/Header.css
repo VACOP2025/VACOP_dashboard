@@ -1,0 +1,39 @@
+/**
+ * Styles for the main application header container.
+ * This rule defines the header as a flex container, distributing
+ * its children (logo, title, controls) evenly with 'space-between'.
+ * It includes padding, a white background, and a bottom border.
+ * 'box-sizing: border-box' ensures padding does not affect the total width.
+ */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #ffffff;
+  border-bottom: 2px solid #eaeaea;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/**
+ * Styles for the main title (H1) within the header.
+ * Resets default margins and sets a clear font size and color.
+ */
+.app-header h1 {
+  font-size: 1.75rem;
+  color: #333;
+  margin: 0;
+}
+
+/**
+ * Utility class for grouping elements within the header.
+ * This is used to keep related items (like a button and a status indicator)
+ * together as a single flex item.
+ * 'gap' provides consistent spacing between elements in the group.
+ */
+.header-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}

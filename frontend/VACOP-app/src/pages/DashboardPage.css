@@ -1,0 +1,79 @@
+/**
+ * Modifier class for the dashboard page's root container.
+ * Sets a light gray background color for the page.
+ */
+.dashboard-page {
+  background-color: #f4f4f4;
+}
+
+/**
+ * Scoped styles for the '.app-header' when rendered within '.dashboard-page'.
+ * This re-establishes the header's core flexbox layout, padding,
+ * and border, ensuring consistency on this specific page.
+ */
+.dashboard-page .app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #ffffff;
+  border-bottom: 2px solid #eaeaea;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/**
+ * Scoped styles for the H1 title within the dashboard header.
+ */
+.dashboard-page .app-header h1 {
+  font-size: 1.75rem;
+  color: #333;
+  margin: 0;
+}
+
+/**
+ * Scoped styles for '.header-group' utility class within the dashboard header.
+ */
+.dashboard-page .header-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/**
+ * Defines the main 3-column grid layout for the dashboard content.
+ * 'flex-grow: 1' allows this element to fill the remaining vertical space
+ * left by the header.
+ * 'grid-template-columns' defines two fixed-width sidebars (320px)
+ * and a flexible, fluid center column (1fr).
+ * 'height: calc(100vh - 70px)' makes the grid fill the entire viewport
+ * height minus the approximate height of the header (70px).
+ */
+.dashboard-grid {
+  flex-grow: 1;
+  display: grid;
+  /* Columns: fixed-left, flexible-center, fixed-right */
+  grid-template-columns: 320px 1fr 320px; 
+  gap: 1.5rem;
+  padding: 1.5rem;
+  width: 100%;
+  height: calc(100vh - 70px); /* Full height minus header */
+  box-sizing: border-box;
+}
+
+/**
+ * Common styles applied to each direct child (column) of the grid.
+ * Each column is a vertical flex container for its panels.
+ * 'gap' provides vertical spacing between panels within the same column.
+ * 'overflow-y: auto' enables scrolling within a column if its
+ * content exceeds the viewport height.
+ */
+.grid-col-left,
+.grid-col-center,
+.grid-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Space between items in the same column */
+  height: 100%;
+  overflow-y: auto;
+}

@@ -1,0 +1,43 @@
+/**
+ * Main container for the obstacle display placeholder.
+ * Establishes a flex column layout for the title and content.
+ * Defines the standard panel appearance (background, border, shadow).
+ */
+.obstacle-display-placeholder {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/**
+ * Styles the title (H4) within the obstacle display panel.
+ * Resets default margins and adds padding, a bottom border,
+ * and a light background for visual separation from the content.
+ */
+.obstacle-display-placeholder h4 {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+  font-size: 1rem;
+  color: #555;
+  background-color: #fcfcfc;
+}
+
+/**
+ * Styles the content area of the obstacle display.
+ * Uses flexbox to center the placeholder text.
+ * 'min-height' ensures the panel maintains its size.
+ * A distinct background color separates it from the title.
+ */
+.obstacle-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  background-color: #f4f4f4;
+  color: #888;
+  font-weight: bold;
+}

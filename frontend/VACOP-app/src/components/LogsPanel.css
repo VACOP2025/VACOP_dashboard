@@ -1,0 +1,77 @@
+/**
+ * Main container for the "Important Logs" panel.
+ * Establishes a flex column layout to position the title and content area.
+ * Defines padding, background, border, and shadow for the panel's visual appearance.
+ * 'min-height' ensures the panel maintains a usable size even if empty.
+ */
+.logs-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem;
+  background: #fdfdfd;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  min-height: 400px;
+}
+
+/**
+ * Styles the title (H4) within the log panel.
+ * Removes default top margin and adds a bottom border for visual separation.
+ */
+.logs-panel h4 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+/**
+ * Styles the content area that holds the scrollable list of logs.
+ * 'flex-grow: 1' allows this element to expand and fill the remaining space
+ * within the '.logs-panel'.
+ * 'overflow-y: auto' enables a vertical scrollbar only if the content exceeds
+ * the available space.
+ * A monospace font is used for log readability.
+ */
+.logs-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/**
+ * Styles individual log entries (paragraph elements).
+ * Resets default margins and ensures long log messages wrap correctly
+ * using 'word-break: break-all'.
+ */
+.logs-content p {
+  margin: 0 0 0.5rem 0;
+  word-break: break-all;
+}
+
+/**
+ * Modifier class for 'WARN' level logs.
+ * Applies a distinct orange color for high visibility.
+ */
+.logs-content .warn {
+  color: #ff9800; /* Orange/Warning */
+}
+
+/**
+ * Modifier class for 'ERROR' level logs.
+ * Applies a distinct red color for high visibility.
+ */
+.logs-content .error {
+  color: #d93025; /* Red/Error */
+}
+
+/**
+ * Modifier class for 'INFO' level logs.
+ * Applies the default text color.
+ */
+.logs-content .info {
+  color: #333; /* Default/Info */
+}

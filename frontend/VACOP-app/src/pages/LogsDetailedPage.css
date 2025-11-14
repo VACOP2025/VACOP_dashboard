@@ -1,0 +1,108 @@
+/**
+ * Defines the root container for the detailed logs page.
+ * Establishes a full-viewport (100vh, 100vw) flex column layout
+ * with a white background.
+ */
+.logs-page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #ffffff;
+}
+
+/**
+ * Styles the header bar specific to the logs page.
+ * Uses flexbox to distribute content ('space-between') and
+ * align items vertically.
+ */
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #ffffff;
+  border-bottom: 2px solid #eaeaea;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/**
+ * Styles the main title (H1) within the logs header.
+ * Resets default margins for precise alignment.
+ */
+.logs-header h1 {
+  font-size: 1.75rem;
+  color: #333;
+  margin: 0;
+}
+
+/**
+ * Utility class for grouping elements within the logs header.
+ * Uses flexbox to align items and 'gap' for spacing.
+ */
+.logs-header .header-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/**
+ * Styles the simple, non-interactive status display in the header
+ * (e.g., "Manette déconnecté").
+ */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  color: #a0a0a0;
+}
+
+/**
+ * Styles the main content area for the log entries.
+ * 'flex-grow: 1' ensures this element fills all available vertical space
+ * left by the header.
+ * 'overflow-y: auto' enables a vertical scrollbar if the logs
+ * exceed the viewport height.
+ * A monospace font is used for readability and alignment of logs.
+ */
+.logs-list {
+  flex-grow: 1; /* Take remaining space */
+  overflow-y: auto; /* This makes it scrollable */
+  padding: 1.5rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+/**
+ * Styles a single log line entry.
+ * Provides consistent spacing and a subtle bottom border
+ * to separate individual log messages.
+ */
+.log-line {
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/**
+ * Modifier class for 'WARN' level logs.
+ * Applies a distinct orange color for high visibility.
+ */
+.log-line.warn {
+  color: #ff9800; /* Orange/Warning */
+}
+
+/**
+ * Modifier class for 'ERROR' level logs.
+ * Applies a distinct red color for high visibility.
+ */
+.log-line.error {
+  color: #d93025; /* Red/Error */
+}

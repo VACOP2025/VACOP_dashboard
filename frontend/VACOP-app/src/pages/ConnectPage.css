@@ -1,0 +1,106 @@
+/**
+ * Modifier class for the connect page's main container.
+ * Overrides the default background color to white.
+ */
+.connect-page {
+  background-color: #ffffff;
+}
+
+/**
+ * Utility class to center content within the app header.
+ * 'flex: 1' allows this group to expand and fill available space.
+ * 'justify-content: center' centers the items within this group.
+ * '!important' is used to ensure the 'gap' overrides the base .header-group.
+ */
+.header-center {
+  flex: 1;
+  justify-content: center;
+  gap: 1.5rem !important;
+}
+
+/**
+ * Styles the title (H1) within the centered header group.
+ */
+.header-center h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+/**
+ * Styles the main content area of the connection page.
+ * 'flex-grow: 1' allows this area to fill the remaining vertical space.
+ * 'display: flex' is used with 'justify-content' and 'align-items'
+ * to center the connection form vertically and horizontally.
+ */
+.connect-main {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+/**
+ * Styles the connection form container.
+ * Establishes a flex column layout for the input groups and button.
+ */
+.connect-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+/**
+ * Styles the container for a single label/input pair.
+ * 'align-items: baseline' ensures the label text and input text
+ * are aligned, regardless of font size differences.
+ */
+.connect-input-group {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+/**
+ * Styles the labels for the IP and Port inputs.
+ */
+.connect-input-group label {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/**
+ * Styles the text inputs for IP and Port.
+ * A transparent background and bottom border create a minimal appearance.
+ */
+.connect-input-group input {
+  font-size: 1.5rem;
+  color: #555;
+  border: none;
+  border-bottom: 2px solid #ddd;
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  background-color: transparent;
+}
+
+/**
+ * Styles the input's 'focus' state.
+ * Removes the default browser outline and provides a visual cue
+ * by changing the border-bottom-color.
+ */
+.connect-input-group input:focus {
+  outline: none;
+  border-bottom-color: #8a2be2; /* Purple */
+}
+
+/**
+ * Overrides for the green button when used within this form.
+ * Adjusts font size, padding, and margin for prominence.
+ */
+.connect-form .btn-green {
+  font-size: 1.25rem;
+  padding: 0.8rem 2.5rem;
+  margin-top: 1.5rem;
+}

@@ -1,0 +1,183 @@
+/**
+ * Root container for a standard page.
+ * Establishes a full-viewport flex column layout, ensuring
+ * the header and main content stack vertically.
+ */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #f4f4f4;
+}
+
+/**
+ * Defines the 3-column grid layout for the mission planner page.
+ * 'flex-grow: 1' allows the grid to fill the remaining vertical space
+ * left by the header.
+ * 'grid-template-columns' sets up a fixed-width left (300px) and
+ * right (250px) sidebar, with a fluid center column (1fr).
+ * 'height: calc(100vh - 70px)' ensures the grid fills the viewport
+ * height minus the header's height (approx. 70px).
+ */
+.planner-grid {
+  flex-grow: 1; /* Takes up remaining vertical space */
+  display: grid;
+  grid-template-columns: 300px 1fr 250px; /* 3-column layout */
+  gap: 1.5rem;
+  padding: 1.5rem;
+  width: 100%;
+  height: calc(100vh - 70px); /* Full height minus header */
+  box-sizing: border-box;
+}
+
+/**
+ * Base styles for all columns within the '.planner-grid'.
+ * 'overflow-y: auto' enables vertical scrolling within a column
+ * if its content overflows the available height.
+ */
+.grid-col-left,
+.grid-col-center,
+.grid-col-right {
+  height: 100%;
+  overflow-y: auto; /* Allow scrolling if content is too tall */
+}
+
+/**
+ * Specific styles for the center column (e.g., MapComponent).
+ * 'display: flex' is used to ensure its child component
+ * can easily stretch to the full height of the column.
+ */
+.grid-col-center {
+  display: flex;
+}
+
+/**
+ * Specific styles for the right column (planning controls).
+ * Establishes a flex column layout for its children.
+ */
+.grid-col-right {
+  display: flex;
+  flex-direction: column;
+}
+
+/**
+ * Container for the mission planning controls (date, time, buttons)
+ * in the right sidebar.
+ * Defines the panel's appearance with padding, background, and shadow.
+ */
+.planning-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/**
+ * Styles for the date and time input fields within the planning controls.
+ * 'box-sizing: border-box' ensures padding does not affect the 100% width.
+ */
+.date-time-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+/* --- General Button Styles --- */
+
+/**
+ * Base button class '.btn'
+ * Resets default button styles and defines common properties
+ * for padding, font, border, cursor, and transition.
+ * 'text-decoration: none' and 'display: inline-block' ensure
+ * that <a> tags styled as buttons behave correctly.
+ */
+.btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+/**
+ * Primary button style (purple).
+ */
+.btn-primary {
+  background-color: #8a2be2; /* Purple */
+  color: white;
+}
+.btn-primary:hover {
+  background-color: #7a1bcd;
+}
+
+/**
+ * Secondary button style (orange).
+ */
+.btn-secondary {
+  background-color: #ff9800; /* Orange */
+  color: white;
+}
+.btn-secondary:hover {
+  background-color: #e68900;
+}
+
+/**
+ * Danger/warning button style (red).
+ */
+.btn-danger {
+  background-color: #d93025; /* Red */
+  color: white;
+}
+.btn-danger:hover {
+  background-color: #b0261d;
+}
+
+/**
+ * Modifier for larger action buttons (e.g., "Lancer la mission").
+ */
+.btn-action {
+  padding: 1rem;
+  font-size: 1.1rem;
+}
+
+/**
+ * Modifier for status display buttons (e.g., "Destination OK/NOK").
+ */
+.btn-status {
+  padding: 1rem;
+  font-size: 1.1rem;
+}
+
+/**
+ * Success/positive button style (green).
+ */
+.btn-green {
+  background-color: #4caf50; /* Green */
+  color: white;
+}
+.btn-green:hover {
+  background-color: #43a047;
+}
+
+/**
+ * Error/negative button style (red).
+ */
+.btn-red {
+  background-color: #d93025; /* Red */
+  color: white;
+}
+.btn-red:hover {
+  background-color: #b0261d;
+}
