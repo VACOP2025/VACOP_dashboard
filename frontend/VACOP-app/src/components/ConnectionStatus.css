@@ -1,0 +1,60 @@
+/**
+ * Base styling for the connection status button.
+ * Establishes a flex container for the icon and text,
+ * setting padding, font size, border radius, and cursor.
+ * The border color is inherited by default and specified by modifiers.
+ */
+.status-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  border: 1px solid;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+/**
+ * Modifier class for the 'disconnected' state.
+ * Overrides the base border and text color to a muted gray.
+ */
+.status-button.disconnected {
+  border-color: #ddd;
+  color: #a0a0a0;
+}
+
+/**
+ * Modifier class for the 'connected' state.
+ * Overrides the base border and text color to green.
+ */
+.status-button.connected {
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+/**
+ * Container for the disconnected icon.
+ * Sets up a relative positioning context to allow
+ * absolute positioning of the slash icon over the base icon.
+ */
+.icon-disconnected {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/**
+ * Styles the slash icon used in the 'disconnected' state.
+ * Positions the slash icon directly over its parent icon.
+ * 'stroke' and 'stroke-width' create a visual cutout effect,
+ * making the slash more legible over the base icon.
+ */
+.icon-slash {
+  position: absolute;
+  color: #d93025;
+  stroke: white;
+  stroke-width: 20;
+}

@@ -1,0 +1,43 @@
+/**
+ * Main container for the static (non-interactive) map display.
+ * Establishes a flex column layout for the title and content.
+ * Defines the standard panel appearance (background, border, shadow).
+ */
+.static-map-placeholder {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/**
+ * Styles the title (H4) within the static map panel.
+ * Resets default margins and adds padding, a bottom border,
+ * and a light background for visual separation from the content.
+ */
+.static-map-placeholder h4 {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+  font-size: 1rem;
+  color: #555;
+  background-color: #fcfcfc;
+}
+
+/**
+ * Styles the content area of the static map.
+ * Uses flexbox to center the placeholder text.
+ * 'min-height' ensures the panel maintains its size.
+ * The background color simulates a map's visual appearance.
+ */
+.map-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  background-color: #e0e0e0; /* Map-like background */
+  color: #888;
+  font-weight: bold;
+}

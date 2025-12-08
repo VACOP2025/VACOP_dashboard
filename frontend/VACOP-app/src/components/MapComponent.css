@@ -1,0 +1,44 @@
+/**
+ * Styles for the map placeholder container.
+ * This container serves as a clickable area for destination selection.
+ * 'position: relative' establishes a positioning context for the map pin.
+ * 'display: flex' is used to center the placeholder text.
+ * 'cursor: pointer' indicates the element is interactive.
+ * 'overflow: hidden' ensures the pin cannot be placed outside the map bounds.
+ */
+.map-placeholder {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #e0e0e0;
+  border: 2px dashed #aaa;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #888;
+  font-weight: bold;
+  cursor: pointer;
+  overflow: hidden; /* To contain the pin */
+  min-height: 400px;
+}
+
+/**
+ * Styles the visual pin placed on the map during a click event.
+ * 'position: absolute' allows the pin to be placed precisely relative
+ * to the '.map-placeholder' container.
+ * 'transform: translate(-50%, -50%)' is a technique to center the pin
+ * element exactly on the click coordinates (which are applied via 'left'
+ * and 'top' inline styles).
+ */
+.map-pin {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: red;
+  border: 2px solid white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%); /* Center the pin on the click */
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
