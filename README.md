@@ -4,7 +4,7 @@
 
 Le projet **VACOP** (Véhicule Autonome Connecté Open-Source et Plug & Play) vise à développer une plateforme de navigation autonome et connectée sur le campus autOCampus (IRIT). L'objectif est de permettre au véhicule de naviguer de manière sécurisée dans un environnement contrôlé, tout en assurant une supervision et un contrôle en temps réel via une interface web dédiée et une infrastructure 5G privée.
 
-Ce projet s'inscrit dans le cadre des activités de recherche et d'expérimentation en mobilité autonome de l'IRIT et du SRI.
+Ce projet s'inscrit dans le cadre des activités de recherche et d'expérimentation en mobilité autonome de l'IRIT et de la promotion SRI 2026.
 
 ---
 
@@ -68,3 +68,4 @@ La structure de l'application frontend (React) est en place, incluant les pages 
 1.  Implémentation de la logique de communication WebSocket (côté client et serveur).
 2.  Connexion du backend aux flux de données ROS2 du véhicule (via MQTT).
 3.  Validation de la chaîne complète, de la sélection de mission sur l'IHM à l'exécution sur le véhicule réel.
+
