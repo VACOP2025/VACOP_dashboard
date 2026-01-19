@@ -1,65 +1,73 @@
+# python 3.11
 import json
-import paho.mqtt.client as mqtt
-from backend.extensions import socketio, db
-from backend.models import Log
-from datetime import datetime
+from paho.mqtt import client as mqtt_client
 
-TOPIC_TELEMETRY = "vacop/telemetry"
-TOPIC_LOGS = "vacop/logs"
-TOPIC_VIDEO_STATUS = "vacop/video"
+load_dotenv()  # loads .env into environment variables
 
-class MQTTService:
-    def __init__(self, app=None):
-        self.client = mqtt.Client(client_id="VACOP_Backend_C2", protocol=mqtt.MQTTv311)
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
-        self.app = app
+BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "localhost")
+BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
+USERNAME = os.getenv("MQTT_USERNAME")
+PASSWORD = os.getenv("MQTT_PASSWORD")
+CLIENT_ID = os.getenv("MQTT_CLIENT_ID", "mqtt_reader_simple")
+TOPIC = os.getenv("MQTT_TOPIC", "#")
 
-    def init_app(self, app):
-        self.app = app
-        broker = app.config.get('MQTT_BROKER_URL', 'localhost')
-        port = app.config.get('MQTT_BROKER_PORT', 1883)
+
+
+def connect_mqtt() -> mqtt_client.Client:
+    def on_connect(client, userdata, flags, reason_code, properties=None):
+        if reason_code == 0:
+            print("Connected to MQTT Broker!")
+            client.subscribe(topic_loc_gnss, qos=0)
+            print(f"Subscribed to {topic_loc_gnss}")
+        else:
+            print(f"Failed to connect, reason_code={reason_code}")
+
+    def on_disconnect(client, userdata, reason_code, properties=None):
+        print(f"Disconnected (reason_code={reason_code})")
+
+    client = mqtt_client.Client(
+        client_id=client_id,
+        clean_session=True,
+        callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
+    )
+    client.username_pw_set(username, password)
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+    client.connect(broker, port, keepalive=30)
+    return client
+
+
+def run():
+    client = connect_mqtt()
+
+    def on_message(client, userdata, msg):
+        text = msg.payload.decode("utf-8", errors="replace")
         try:
-            self.client.connect(broker, port, 60)
-            self.client.loop_start()
-            print(f"[MQTT] Connecté au broker {broker}:{port}")
-        except Exception as e:
-            print(f"[MQTT] Erreur de connexion: {e}")
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            print(f"[MSG] {msg.topic} -> (non-json) {text}")
+            return
 
-    def on_connect(self, client, userdata, flags, rc):
-        print(f"[MQTT] Connected with result code {rc}")
-        client.subscribe([(TOPIC_TELEMETRY, 0), (TOPIC_LOGS, 0), (TOPIC_VIDEO_STATUS, 0)])
+        ts = data.get("timestamp")
+        lat_raw = data.get("latitude")
+        lon_raw = data.get("longitude")
 
-    def on_message(self, client, userdata, msg):
-        topic = msg.topic
-        payload = msg.payload.decode('utf-8')
-        try:
-            data = json.loads(payload)
-        except:
-            data = {"raw_message": payload}
+        # protect against missing fields
+        if lat_raw is None or lon_raw is None:
+            print(f"[MSG] {msg.topic} -> missing lat/lon: {data}")
+            return
 
-        if topic == TOPIC_TELEMETRY:
-            socketio.emit('telemetry_update', data, namespace='/')
-        elif topic == TOPIC_LOGS:
-            socketio.emit('new_log', data, namespace='/')
-            if self.app:
-                with self.app.app_context():
-                    try:
-                        new_log = Log(
-                            level=data.get('level', 'INFO'),
-                            source=data.get('source', 'vehicle'),
-                            message=data.get('message', payload),
-                            timestamp=datetime.utcnow()
-                        )
-                        db.session.add(new_log)
-                        db.session.commit()
-                    except Exception as e:
-                        print(f"[MQTT] Erreur sauvegarde log DB: {e}")
+        lat = lat_raw / 1e7
+        lon = lon_raw / 1e7
 
-    def publish_command(self, command_type, payload):
-        topic = f"vacop/command/{command_type}"
-        message = json.dumps(payload)
-        self.client.publish(topic, message)
-        print(f"[MQTT] Commande envoyée: {topic}")
+        print(f"[MSG] {msg.topic}")
+        print("timestamp:", ts)
+        print("latitude:", lat)
+        print("longitude:", lon)
 
-mqtt_client = MQTTService()
+    client.on_message = on_message
+    client.loop_forever()
+
+
+if __name__ == "__main__":
+    run()
