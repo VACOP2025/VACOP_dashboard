@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # 1. Le Frontend (Interface React)
+  frontend:
+    build: ./frontend/VACOP-app
+    container_name: vacop_frontend
+    ports:
+      - "80:80"  # Accessible via http://localhost
+    depends_on:
+      - backend
+    networks:
+      - vacop_net
+
+  # 2. Le Backend (API Flask)
+  backend:
+    build: ./backend/vacop-backend
+    container_name: vacop_backend
+    ports:
+      - "5000:5000" # Accessible via http://localhost:5000
+    environment:
+      - DATABASE_URL=postgresql://vacop_user:vacop_pass@db:5432/vacop_db
+      - MQTT_BROKER_URL=mqtt
+      - SECRET_KEY=dev_secret_key_change_me
+    depends_on:
+      - db
+      - mqtt
+    networks:
+      - vacop_net
+
+  # 3. La Base de données (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: vacop_db
+    environment:
+      - POSTGRES_USER=vacop_user
+      - POSTGRES_PASSWORD=vacop_pass
+      - POSTGRES_DB=vacop_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vacop_net
+
+  # 4. Le Broker MQTT (Communication Véhicule)
+  mqtt:
+    image: eclipse-mosquitto:1.6
+    container_name: vacop_mqtt
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    networks:
+      - vacop_net
+
+networks:
+  vacop_net:
+
+volumes:
+  postgres_data:
