@@ -1,24 +1,30 @@
 from flask import Blueprint, jsonify, request
 from ..models import RobotPosition
-from ..services.mqtt_service import get_latest_position
+from ..services.telemetry_state import get_latest_position
 from ..extensions import db
 
-bp = Blueprint("telemetry", __name__, url_prefix="/api/telemetry")
+telemetry_bp = Blueprint("telemetry", __name__, url_prefix="/api/telemetry")
 
-@bp.get("/latest")
+@telemetry_bp.get("/latest")
 def latest():
     pos = get_latest_position()
-    # fallback to DB if server restarted and memory is empty
-    if pos is None:
+    if pos is not None:
+        return jsonify(pos)
+
+    # DB fallback only if available
+    try:
         row = (
             db.session.query(RobotPosition)
             .order_by(RobotPosition.ts.desc())
             .first()
         )
         return jsonify(row.to_dict() if row else None)
-    return jsonify(pos)
+    except Exception:
+        # DB down -> just return None (no 500)
+        return jsonify(None)
 
-@bp.get("/history")
+
+@telemetry_bp.get("/history")
 def history():
     robot_id = request.args.get("robot_id", "robot_1")
     limit = int(request.args.get("limit", "200"))

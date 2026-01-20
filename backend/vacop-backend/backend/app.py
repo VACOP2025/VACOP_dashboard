@@ -2,9 +2,15 @@ from flask import Flask
 from backend.extensions import db, jwt, socketio, bcrypt, cors
 from backend.routes.auth import auth_bp
 from backend.routes.mission import mission_bp
-from backend.routes.telemetry import telemetry_bp   # ✅ add
+from backend.routes.telemetry import telemetry_bp   
 from backend.services.mqtt_service import mqtt_client
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# charge .env
+load_dotenv(Path(__file__).resolve().with_name(".env"))
+
 
 def create_app():
     app = Flask(__name__)
@@ -22,7 +28,7 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    cors.init_app(app)
+    cors.init_app(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:3000"]}})
     socketio.init_app(app)
     mqtt_client.init_app(app)
 
@@ -34,4 +40,11 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=5000,
+        debug=True,
+        use_reloader=False, 
+    )
+

@@ -1,7 +1,6 @@
 from backend.extensions import db
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import JSON
-from datetime import datetime
 from .extensions import db
 
 class User(db.Model):

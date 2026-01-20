@@ -13,13 +13,16 @@ mqtt_client = Mqtt()
 def handle_connect(client, userdata, flags, rc):
     topic = os.getenv("MQTT_TOPIC", "robot/gnss")
     mqtt_client.subscribe(topic)
-    print(f"[MQTT] connected rc={rc}, subscribed to {topic}")
+    print("[MQTT] connected rc=", rc, "to", client._host, ":", client._port, "subscribed", topic)
+
 
 @mqtt_client.on_message()
 def handle_mqtt_message(client, userdata, message):
     try:
         text = message.payload.decode("utf-8", errors="replace")
         data = json.loads(text)
+        print("[MQTT] msg on", message.topic, "payload=", text)
+
     except Exception:
         return
 
@@ -30,15 +33,23 @@ def handle_mqtt_message(client, userdata, message):
     if lat_raw is None or lon_raw is None:
         return
 
-    lat = lat_raw / 1e7
-    lng = lon_raw / 1e7
+    def to_deg(v):
+        if isinstance(v, (int, float)) and abs(v) > 1000:  # typiquement ~4e8 si /1e7 nécessaire
+            return v / 1e7
+        return float(v)
 
-    ayload = {
+    lat = to_deg(lat_raw)
+    lng = to_deg(lon_raw)
+
+
+    payload = {
         "ts": datetime.utcnow().isoformat() if ts_raw is None else ts_raw,
         "lat": lat,
-        "lnpg": lng,
+        "lng": lng,
         "topic": message.topic,
     }
+
+
 
     set_latest_position(payload)
     socketio.emit("robot:position", payload)

@@ -1,7 +1,7 @@
 import threading
 
 _LOCK = threading.Lock()
-_LATEST_POS = None
+_LATEST_POS = None  # dict ou None
 
 def set_latest_position(pos: dict):
     global _LATEST_POS
