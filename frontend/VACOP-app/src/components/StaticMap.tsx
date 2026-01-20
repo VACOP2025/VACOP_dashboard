@@ -1,24 +1,23 @@
-import React from 'react';
-import './StaticMap.css'; // Imports component-specific styles
+import React, { useState } from "react";
+import { RobotMap } from "./RobotMap";
 
-/**
- * A placeholder component for the static, non-interactive map view.
- *
- * This component is used on dashboards to display the robot's position
- * or environment without allowing user interaction (unlike MapComponent).
- * Currently, it renders a static placeholder.
- *
- * @returns {React.ReactElement} The rendered static map panel.
- */
-const StaticMap: React.FC = () => {
+export default function Demo() {
+  const [position, setPosition] = useState({ lat: 43.6045, lng: 1.4442 });
+
   return (
-    <div className="static-map-placeholder">
-      <h4>Map</h4>
-      <div className="map-content">
-        <p>(Static Map View)</p>
+    <div style={{ padding: 16 }}>
+      <RobotMap position={position} zoom={19} follow />
+
+      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+        <button onClick={() => setPosition(p => ({ ...p, lat: p.lat + 0.0002 }))}>Nord</button>
+        <button onClick={() => setPosition(p => ({ ...p, lat: p.lat - 0.0002 }))}>Sud</button>
+        <button onClick={() => setPosition(p => ({ ...p, lng: p.lng + 0.0002 }))}>Est</button>
+        <button onClick={() => setPosition(p => ({ ...p, lng: p.lng - 0.0002 }))}>Ouest</button>
+      </div>
+
+      <div style={{ marginTop: 8, fontFamily: "monospace" }}>
+        lat={position.lat.toFixed(6)} lng={position.lng.toFixed(6)}
       </div>
     </div>
   );
-};
-
-export default StaticMap;
+}
