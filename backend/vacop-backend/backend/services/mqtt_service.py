@@ -1,65 +1,71 @@
+import os
 import json
-import paho.mqtt.client as mqtt
-from backend.extensions import socketio, db
-from backend.models import Log
 from datetime import datetime
 
-TOPIC_TELEMETRY = "vacop/telemetry"
-TOPIC_LOGS = "vacop/logs"
-TOPIC_VIDEO_STATUS = "vacop/video"
+from flask_mqtt import Mqtt
 
-class MQTTService:
-    def __init__(self, app=None):
-        self.client = mqtt.Client(client_id="VACOP_Backend_C2", protocol=mqtt.MQTTv311)
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
-        self.app = app
+from backend.extensions import socketio
+from backend.services.telemetry_state import set_latest_position
 
-    def init_app(self, app):
-        self.app = app
-        broker = app.config.get('MQTT_BROKER_URL', 'localhost')
-        port = app.config.get('MQTT_BROKER_PORT', 1883)
-        try:
-            self.client.connect(broker, port, 60)
-            self.client.loop_start()
-            print(f"[MQTT] Connecté au broker {broker}:{port}")
-        except Exception as e:
-            print(f"[MQTT] Erreur de connexion: {e}")
+mqtt_client = Mqtt()
 
-    def on_connect(self, client, userdata, flags, rc):
-        print(f"[MQTT] Connected with result code {rc}")
-        client.subscribe([(TOPIC_TELEMETRY, 0), (TOPIC_LOGS, 0), (TOPIC_VIDEO_STATUS, 0)])
+@mqtt_client.on_connect()
+def handle_connect(client, userdata, flags, rc):
+    topic = os.getenv("MQTT_TOPIC", "robot/gnss")
+    mqtt_client.subscribe(topic)
+    #print("[MQTT] connected rc=", rc, "to", client._host, ":", client._port, "subscribed", topic)
 
-    def on_message(self, client, userdata, msg):
-        topic = msg.topic
-        payload = msg.payload.decode('utf-8')
-        try:
-            data = json.loads(payload)
-        except:
-            data = {"raw_message": payload}
 
-        if topic == TOPIC_TELEMETRY:
-            socketio.emit('telemetry_update', data, namespace='/')
-        elif topic == TOPIC_LOGS:
-            socketio.emit('new_log', data, namespace='/')
-            if self.app:
-                with self.app.app_context():
-                    try:
-                        new_log = Log(
-                            level=data.get('level', 'INFO'),
-                            source=data.get('source', 'vehicle'),
-                            message=data.get('message', payload),
-                            timestamp=datetime.utcnow()
-                        )
-                        db.session.add(new_log)
-                        db.session.commit()
-                    except Exception as e:
-                        print(f"[MQTT] Erreur sauvegarde log DB: {e}")
+@mqtt_client.on_message()
+def handle_mqtt_message(client, userdata, message):
+    try:
+        text = message.payload.decode("utf-8", errors="replace")
+        data = json.loads(text)
+        #print("[MQTT] msg on", message.topic, "payload=", text)
 
-    def publish_command(self, command_type, payload):
-        topic = f"vacop/command/{command_type}"
-        message = json.dumps(payload)
-        self.client.publish(topic, message)
-        print(f"[MQTT] Commande envoyée: {topic}")
+    except Exception:
+        return
 
-mqtt_client = MQTTService()
+    lat_raw = data.get("latitude")
+    lon_raw = data.get("longitude")
+    ts_raw = data.get("timestamp")
+
+    if lat_raw is None or lon_raw is None:
+        return
+
+    def to_deg(v):
+        if isinstance(v, (int, float)) and abs(v) > 1000:  # typiquement ~4e8 si /1e7 nécessaire
+            return v / 1e7
+        return float(v)
+
+    lat = to_deg(lat_raw)
+    lng = to_deg(lon_raw)
+
+
+    payload = {
+        "ts": datetime.utcnow().isoformat() if ts_raw is None else ts_raw,
+        "lat": lat,
+        "lng": lng,
+        "topic": message.topic,
+    }
+
+
+
+    set_latest_position(payload)
+    socketio.emit("robot:position", payload)
+
+def publish_command(command: str, payload: dict) -> None:
+    """
+    Publish a command message to the MQTT broker.
+
+    - Uses an environment-based topic prefix for consistency.
+    - Serializes payload as JSON.
+    - Provides a minimal debug log for validation.
+    """
+    base = os.getenv("MQTT_COMMAND_BASE", "robot/command")
+    topic = f"{base}/{command}"
+
+    mqtt_client.publish(topic, json.dumps(payload))
+    print("[MQTT] publish", topic)
+
+

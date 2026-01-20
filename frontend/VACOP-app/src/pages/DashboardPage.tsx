@@ -6,7 +6,7 @@ import VideoFeed from '../components/VideoFeed';
 import ObstacleDisplay from '../components/ObstacleDisplay';
 import StaticMap from '../components/StaticMap';
 import './DashboardPage.css'; // Component-specific styles
-
+import { useGamepadStatus } from "../hooks/useGamepadStatus";
 /**
  * Renders the main dashboard UI for monitoring an active autonomous mission.
  *
@@ -22,8 +22,7 @@ const DashboardPage: React.FC = () => {
   // --- Component State ---
 
   // Manages the connection state of the gamepad (placeholder).
-  const [isGamepadConnected, setGamepadConnected] = useState(false);
-  
+  const { isConnected: isGamepadConnected } = useGamepadStatus(true);  
   // Manages the connection state of the robot (placeholder).
   // Hardcoded to 'true' to simulate the "Réseau 5G" (connected) state.
   const [isRobotConnected, setRobotConnected] = useState(true);
@@ -76,12 +75,12 @@ const DashboardPage: React.FC = () => {
             rel="noopener noreferrer" 
             style={{textDecoration: 'none'}}
           >
-            <ConnectionStatus 
-              // The label dynamically updates based on the connection state.
-              label={isRobotConnected ? "Réseau 5G" : "Se connecter"} 
-              isConnected={isRobotConnected} 
-              type="robot" 
-            />
+          <ConnectionStatus 
+            label={isGamepadConnected ? "Manette connectée" : "Manette déconnectée"}
+            isConnected={isGamepadConnected}
+            type="gamepad"
+          />
+
           </Link>
 
           {/* Link to the detailed logs page (opens in new tab) */}
