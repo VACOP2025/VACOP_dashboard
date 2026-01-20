@@ -68,4 +68,3 @@ def publish_command(command: str, payload: dict) -> None:
     mqtt_client.publish(topic, json.dumps(payload))
     print("[MQTT] publish", topic)
 
-

@@ -29,7 +29,16 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    cors.init_app(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:3000"]}})
+    cors.init_app(app, resources={
+    r"/*": {"origins": [
+        "http://localhost",
+        "http://127.0.0.1",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]}
+    })
     socketio.init_app(app)
     mqtt_client.init_app(app)
 
