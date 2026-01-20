@@ -13,7 +13,7 @@ mqtt_client = Mqtt()
 def handle_connect(client, userdata, flags, rc):
     topic = os.getenv("MQTT_TOPIC", "robot/gnss")
     mqtt_client.subscribe(topic)
-    print("[MQTT] connected rc=", rc, "to", client._host, ":", client._port, "subscribed", topic)
+    #print("[MQTT] connected rc=", rc, "to", client._host, ":", client._port, "subscribed", topic)
 
 
 @mqtt_client.on_message()
@@ -21,7 +21,7 @@ def handle_mqtt_message(client, userdata, message):
     try:
         text = message.payload.decode("utf-8", errors="replace")
         data = json.loads(text)
-        print("[MQTT] msg on", message.topic, "payload=", text)
+        #print("[MQTT] msg on", message.topic, "payload=", text)
 
     except Exception:
         return
@@ -53,3 +53,19 @@ def handle_mqtt_message(client, userdata, message):
 
     set_latest_position(payload)
     socketio.emit("robot:position", payload)
+
+def publish_command(command: str, payload: dict) -> None:
+    """
+    Publish a command message to the MQTT broker.
+
+    - Uses an environment-based topic prefix for consistency.
+    - Serializes payload as JSON.
+    - Provides a minimal debug log for validation.
+    """
+    base = os.getenv("MQTT_COMMAND_BASE", "robot/command")
+    topic = f"{base}/{command}"
+
+    mqtt_client.publish(topic, json.dumps(payload))
+    print("[MQTT] publish", topic)
+
+
