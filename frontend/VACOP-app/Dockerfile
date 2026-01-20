@@ -1,10 +1,10 @@
 # Étape 1 : Construction de l'app React
-FROM node:18-alpine as build
+FROM node:22-alpine as build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm run build
+RUN npx vite build
 
 # Étape 2 : Serveur Web (Nginx)
 FROM nginx:alpine
