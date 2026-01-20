@@ -1,6 +1,8 @@
 from backend.extensions import db
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import JSON
+from datetime import datetime
+from .extensions import db
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -46,4 +48,28 @@ class Log(db.Model):
             'source': self.source,
             'message': self.message,
             'mission_id': self.mission_id
+        }
+
+
+class RobotPosition(db.Model):
+    __tablename__ = "robot_positions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    robot_id = db.Column(db.String(64), nullable=False, index=True, default="robot_1")
+
+    ts = db.Column(db.DateTime, nullable=False, index=True, default=datetime.utcnow)
+    lat = db.Column(db.Float, nullable=False)
+    lng = db.Column(db.Float, nullable=False)
+
+    topic = db.Column(db.String(256), nullable=True)
+    raw = db.Column(db.JSON, nullable=True)   # store the original JSON if you want
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "robot_id": self.robot_id,
+            "ts": self.ts.isoformat(),
+            "lat": self.lat,
+            "lng": self.lng,
+            "topic": self.topic,
         }

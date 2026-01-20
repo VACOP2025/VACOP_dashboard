@@ -1,73 +1,44 @@
-# python 3.11
+import os
 import json
-from paho.mqtt import client as mqtt_client
+from datetime import datetime
 
-load_dotenv()  # loads .env into environment variables
+from flask_mqtt import Mqtt
 
-BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "localhost")
-BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
-USERNAME = os.getenv("MQTT_USERNAME")
-PASSWORD = os.getenv("MQTT_PASSWORD")
-CLIENT_ID = os.getenv("MQTT_CLIENT_ID", "mqtt_reader_simple")
-TOPIC = os.getenv("MQTT_TOPIC", "#")
+from backend.extensions import socketio
+from backend.services.telemetry_state import set_latest_position
 
+mqtt_client = Mqtt()
 
+@mqtt_client.on_connect()
+def handle_connect(client, userdata, flags, rc):
+    topic = os.getenv("MQTT_TOPIC", "robot/gnss")
+    mqtt_client.subscribe(topic)
+    print(f"[MQTT] connected rc={rc}, subscribed to {topic}")
 
-def connect_mqtt() -> mqtt_client.Client:
-    def on_connect(client, userdata, flags, reason_code, properties=None):
-        if reason_code == 0:
-            print("Connected to MQTT Broker!")
-            client.subscribe(topic_loc_gnss, qos=0)
-            print(f"Subscribed to {topic_loc_gnss}")
-        else:
-            print(f"Failed to connect, reason_code={reason_code}")
+@mqtt_client.on_message()
+def handle_mqtt_message(client, userdata, message):
+    try:
+        text = message.payload.decode("utf-8", errors="replace")
+        data = json.loads(text)
+    except Exception:
+        return
 
-    def on_disconnect(client, userdata, reason_code, properties=None):
-        print(f"Disconnected (reason_code={reason_code})")
+    lat_raw = data.get("latitude")
+    lon_raw = data.get("longitude")
+    ts_raw = data.get("timestamp")
 
-    client = mqtt_client.Client(
-        client_id=client_id,
-        clean_session=True,
-        callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
-    )
-    client.username_pw_set(username, password)
-    client.on_connect = on_connect
-    client.on_disconnect = on_disconnect
-    client.connect(broker, port, keepalive=30)
-    return client
+    if lat_raw is None or lon_raw is None:
+        return
 
+    lat = lat_raw / 1e7
+    lng = lon_raw / 1e7
 
-def run():
-    client = connect_mqtt()
+    ayload = {
+        "ts": datetime.utcnow().isoformat() if ts_raw is None else ts_raw,
+        "lat": lat,
+        "lnpg": lng,
+        "topic": message.topic,
+    }
 
-    def on_message(client, userdata, msg):
-        text = msg.payload.decode("utf-8", errors="replace")
-        try:
-            data = json.loads(text)
-        except json.JSONDecodeError:
-            print(f"[MSG] {msg.topic} -> (non-json) {text}")
-            return
-
-        ts = data.get("timestamp")
-        lat_raw = data.get("latitude")
-        lon_raw = data.get("longitude")
-
-        # protect against missing fields
-        if lat_raw is None or lon_raw is None:
-            print(f"[MSG] {msg.topic} -> missing lat/lon: {data}")
-            return
-
-        lat = lat_raw / 1e7
-        lon = lon_raw / 1e7
-
-        print(f"[MSG] {msg.topic}")
-        print("timestamp:", ts)
-        print("latitude:", lat)
-        print("longitude:", lon)
-
-    client.on_message = on_message
-    client.loop_forever()
-
-
-if __name__ == "__main__":
-    run()
+    set_latest_position(payload)
+    socketio.emit("robot:position", payload)

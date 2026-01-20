@@ -2,6 +2,7 @@ from flask import Flask
 from backend.extensions import db, jwt, socketio, bcrypt, cors
 from backend.routes.auth import auth_bp
 from backend.routes.mission import mission_bp
+from backend.routes.telemetry import telemetry_bp   # ✅ add
 from backend.services.mqtt_service import mqtt_client
 import os
 
@@ -12,7 +13,12 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = 'jwt_secret_vacop_2024'
     app.config['MQTT_BROKER_URL'] = os.environ.get('MQTT_BROKER_URL', 'localhost')
-    
+    app.config["MQTT_BROKER_PORT"] = int(os.environ.get("MQTT_BROKER_PORT", "1883"))
+    app.config["MQTT_USERNAME"] = os.environ.get("MQTT_USERNAME")
+    app.config["MQTT_PASSWORD"] = os.environ.get("MQTT_PASSWORD")
+    app.config["MQTT_KEEPALIVE"] = 30
+    app.config["MQTT_TLS_ENABLED"] = False
+
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
@@ -22,6 +28,7 @@ def create_app():
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(mission_bp)
+    app.register_blueprint(telemetry_bp)  # ✅ add
 
     return app
 
