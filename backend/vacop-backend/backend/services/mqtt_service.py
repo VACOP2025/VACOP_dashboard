@@ -1,7 +1,3 @@
-import os
-import json
-from datetime import datetime
-
 from flask_mqtt import Mqtt
 
 from backend.extensions import socketio
@@ -67,5 +63,3 @@ def publish_command(command: str, payload: dict) -> None:
 
     mqtt_client.publish(topic, json.dumps(payload))
     print("[MQTT] publish", topic)
-
-
