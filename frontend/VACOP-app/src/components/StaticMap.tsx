@@ -43,23 +43,8 @@ export default function Demo() {
       */}
       <RobotMap zoom={19} follow />
 
-      <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button type="button" onClick={moveNorth} aria-label="Move marker north">
-          North
-        </button>
-        <button type="button" onClick={moveSouth} aria-label="Move marker south">
-          South
-        </button>
-        <button type="button" onClick={moveEast} aria-label="Move marker east">
-          East
-        </button>
-        <button type="button" onClick={moveWest} aria-label="Move marker west">
-          West
-        </button>
-      </div>
-
-      <div style={{ marginTop: 8, fontFamily: "monospace" }}>
-        lat={position.lat.toFixed(6)} lng={position.lng.toFixed(6)}
+      <div style={{ color: "black",marginTop: 8, fontFamily: "monospace" }}>
+        GNSS : lat={position.lat.toFixed(6)} lng={position.lng.toFixed(6)}
       </div>
     </div>
   );

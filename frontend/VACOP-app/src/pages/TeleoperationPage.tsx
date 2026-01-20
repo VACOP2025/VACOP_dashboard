@@ -6,6 +6,9 @@ import VideoFeed from '../components/VideoFeed';
 import ObstacleDisplay from '../components/ObstacleDisplay';
 import StaticMap from '../components/StaticMap';
 import './TeleoperationPage.css'; // Import component-specific styles
+import { useGamepadStatus } from "../hooks/useGamepadStatus";
+import { useGamepadDebug } from "../hooks/useGamepadDebug";
+import { useGamepadTransmit } from "../hooks/useGamepadTransmit";
 
 /**
  * Renders the dashboard page for "Teleoperation" mode.
@@ -23,8 +26,13 @@ const TeleoperationPage: React.FC = () => {
 
   // Manages the gamepad connection state (placeholder).
   // Set to 'true' to match the mockup "Manette connectée".
-  const [isGamepadConnected, setGamepadConnected] = useState(true); 
-  
+  const { isConnected: isGamepadConnected } = useGamepadStatus(true);  
+  useGamepadDebug(isGamepadConnected, 20);
+  useGamepadTransmit(isGamepadConnected, {
+  endpointUrl: "http://localhost:5000/command/gamepad",
+  enableDebugLogs: true,
+  pollHz: 20,
+});
   // Manages the robot connection state (placeholder).
   // Set to 'true' to match the mockup "Réseau 5G".
   const [isRobotConnected, setRobotConnected] = useState(true);
