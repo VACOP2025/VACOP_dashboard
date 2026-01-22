@@ -3,7 +3,7 @@ from backend.extensions import db, jwt, socketio, bcrypt, cors
 from backend.routes.auth import auth_bp
 from backend.routes.mission import mission_bp
 from backend.routes.telemetry import telemetry_bp   
-from backend.services.mqtt_service import mqtt_client
+from backend.services.mqtt_service import mqtt_client, set_flask_app
 from backend.routes.gamepad import gamepad_bp
 import os
 from pathlib import Path
@@ -41,6 +41,7 @@ def create_app():
     })
     socketio.init_app(app)
     mqtt_client.init_app(app)
+    set_flask_app(app)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(mission_bp)
