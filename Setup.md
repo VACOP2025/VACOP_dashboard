@@ -3,11 +3,11 @@
 To run the application locally for development for the 1st time:
 
 ```bash
-docker-compose down --remove-orphans    
+sudo docker-compose down --remove-orphans    
 
-docker rm -f vacop_backend || true
+sudo docker rm -f vacop_backend || true
 
-docker-compose up --build
+sudo docker-compose up --build
 ```
 
 
@@ -15,10 +15,10 @@ docker-compose up --build
 
 To run the app or restart the app :
 ```bash
-docker-compose down
+sudo docker-compose down
 ```
 then 
 ```bash
-docker-compose up --build
+sudo docker-compose up --build
 ```
 And you can access the app via localhost address on your browser. 
