@@ -5,6 +5,7 @@ from backend.routes.mission import mission_bp
 from backend.routes.telemetry import telemetry_bp   
 from backend.services.mqtt_service import mqtt_client, set_flask_app
 from backend.routes.gamepad import gamepad_bp
+from backend.routes.map import map_bp
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -47,6 +48,7 @@ def create_app():
     app.register_blueprint(mission_bp)
     app.register_blueprint(telemetry_bp)  
     app.register_blueprint(gamepad_bp)
+    app.register_blueprint(map_bp)
 
     return app
 

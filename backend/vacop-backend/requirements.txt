@@ -9,3 +9,5 @@ paho-mqtt==1.6.1
 python-dotenv==1.0.0
 eventlet==0.33.3
 flask-mqtt==1.1.0
+matplotlib
+numpy
