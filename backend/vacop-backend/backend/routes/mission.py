@@ -60,3 +60,27 @@ def get_logs():
         query = query.filter_by(level=level)
     logs = query.limit(limit).all()
     return jsonify([log.to_dict() for log in logs]), 200
+
+@mission_bp.route('/goal', methods=['POST'])
+def publish_goal():
+    data = request.get_json()
+    # User requested specific structure validation could be done here, 
+    # but we will just pass it through to MQTT /goal topic.
+    
+    # "pose: ..., behavior_tree: ''" is expected in 'data'
+    
+    # Publish to /goal
+    # mqtt_client.publish is not directly exposed but we can use the client object
+    # The user said "le backend publiera cela sur un topic mqtt qui s'apelle /goal"
+    
+    try:
+        from backend.services.mqtt_service import mqtt_client
+        import json
+        
+        # Ensure we publish exactly what is requested
+        # If the frontend sends the whole object, we send it.
+        mqtt_client.publish("/goal", json.dumps(data))
+        
+        return jsonify({"msg": "Goal published"}), 200
+    except Exception as e:
+        return jsonify({"msg": f"Failed to publish goal: {str(e)}"}), 500

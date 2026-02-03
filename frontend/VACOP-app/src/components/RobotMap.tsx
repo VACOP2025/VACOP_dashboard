@@ -1,12 +1,11 @@
-
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import type { LatLngExpression } from "leaflet";
 import L from "leaflet";
 import { io, type Socket } from "socket.io-client";
 
 type LatLng = { lat: number; lng: number };
-type BackendPos = { ts: string; lat: number; lng: number; topic?: string };
+type BackendPos = { ts: number | string; lat: number; lng: number; topic?: string };
 
 type RobotMapProps = {
   backendUrl?: string; // e.g. "http://localhost:5000"
@@ -34,9 +33,28 @@ function FollowCenter({ position, follow }: { position: LatLng; follow: boolean 
 
   useEffect(() => {
     if (!follow) return;
+
     // Recenter smoothly without changing zoom level.
     map.setView([position.lat, position.lng], map.getZoom(), { animate: true });
   }, [position.lat, position.lng, follow, map]);
+
+  return null;
+}
+
+function FitBoundsOnce({ track }: { track: [number, number][] }) {
+  const map = useMap();
+  const didFit = useRef(false);
+
+  useEffect(() => {
+    if (didFit.current) return;
+    if (track.length < 2) return;
+
+    // Fit map to the trajectory bounds once, then lock.
+    const bounds = L.latLngBounds(track.map((p) => L.latLng(p[0], p[1])));
+    map.fitBounds(bounds, { padding: [20, 20] });
+
+    didFit.current = true;
+  }, [track, map]);
 
   return null;
 }
@@ -52,6 +70,9 @@ export function RobotMap({
     lat: 43.6045,
     lng: 1.4442,
   });
+
+  // Store the trajectory as an ordered list of [lat, lng] points.
+  const [track, setTrack] = useState<[number, number][]>([]);
 
   /**
    * Normalize backendUrl to avoid accidental double slashes like:
@@ -79,18 +100,45 @@ export function RobotMap({
       .then((p: BackendPos | null) => {
         if (p?.lat != null && p?.lng != null) {
           setPosition({ lat: p.lat, lng: p.lng });
+          console.debug("[Map] latest position:", p.lat, p.lng, "ts=", p.ts);
         }
       })
       .catch(() => {
         // Ignore: API might be unavailable at first load.
       });
 
+    // 1b) Load recent history for the polyline (last 10 minutes).
+    const loadHistory = async () => {
+      const sinceMs = Date.now() - 10 * 60 * 1000; // last 10 minutes
+      const url = `${baseUrl}/api/telemetry/history?robot_id=robot_1&since_ms=${sinceMs}&limit=5000`;
+
+      console.debug("[Map] fetching history:", url);
+
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) {
+        throw new Error(`History fetch failed: ${res.status} ${res.statusText}`);
+      }
+
+      const rows: Array<{ lat: number; lng: number; ts: string | number }> = await res.json();
+
+      const pts: [number, number][] = rows
+        .filter((r) => typeof r.lat === "number" && typeof r.lng === "number")
+        .map((r) => [r.lat, r.lng]);
+
+      console.debug("[Map] history loaded points:", pts.length);
+
+      setTrack(pts);
+
+      // If history exists, sync marker to the last known historical point.
+      if (pts.length > 0) {
+        const last = pts[pts.length - 1];
+        setPosition({ lat: last[0], lng: last[1] });
+      }
+    };
+
+    loadHistory().catch((err) => console.error("[Map] loadHistory error:", err));
+
     // 2) Live updates via Socket.IO.
-    //
-    // IMPORTANT:
-    // - Do not force websocket-only. In some environments WebSocket upgrade can fail
-    //   (proxy, dev server, eventlet config...), but polling still works reliably.
-    // - Putting "polling" first avoids noisy Firefox console warnings during the initial WS attempt.
     const socket = io(baseUrl, {
       path: "/socket.io",
       transports: ["polling", "websocket"],
@@ -99,18 +147,15 @@ export function RobotMap({
       reconnectionDelay: 500,
       reconnectionDelayMax: 3000,
       timeout: 8000,
-      // withCredentials: false, // enable only if your backend requires credentials/cookies
     });
 
     socketRef.current = socket;
 
-    // Optional: useful diagnostics in development.
     socket.on("connect", () => {
       console.debug("[socket.io] connected:", socket.id, "transport:", socket.io.engine.transport.name);
     });
 
     socket.on("connect_error", (err) => {
-      // This often fires when WS upgrade fails; polling may still succeed afterwards.
       console.debug("[socket.io] connect_error:", err?.message ?? err);
     });
 
@@ -119,15 +164,31 @@ export function RobotMap({
     });
 
     socket.on("robot:position", (p: BackendPos) => {
-      if (p?.lat != null && p?.lng != null) {
-        setPosition({ lat: p.lat, lng: p.lng });
-      }
+      if (p?.lat == null || p?.lng == null) return;
+
+      const next: [number, number] = [p.lat, p.lng];
+
+      // Update marker.
+      setPosition({ lat: p.lat, lng: p.lng });
+
+      // Append to trajectory (with a minimal anti-duplicate guard + periodic debug log).
+      setTrack((prev) => {
+        const last = prev.length > 0 ? prev[prev.length - 1] : null;
+        if (last && last[0] === next[0] && last[1] === next[1]) return prev;
+
+        const updated = [...prev, next];
+        if (updated.length % 20 === 0) {
+          console.debug("[Map] track length:", updated.length);
+        }
+        return updated;
+      });
+
+      console.debug("[Map] live position:", next, "ts=", p.ts);
     });
 
     return () => {
       controller.abort();
 
-      // Ensure we cleanly close the socket.
       socket.off();
       socket.disconnect();
       socketRef.current = null;
@@ -141,17 +202,21 @@ export function RobotMap({
 
   return (
     <div style={{ width: "100%", height, borderRadius: 12, overflow: "hidden" }}>
-      <MapContainer
-        center={center}
-        zoom={zoom}
-        style={{ width: "100%", height: "100%" }}
-        scrollWheelZoom
-      >
+      <MapContainer center={center} zoom={zoom} style={{ width: "100%", height: "100%" }} scrollWheelZoom>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        {/* Fit the view to the trajectory once the history is loaded */}
+        <FitBoundsOnce track={track} />
+
+        {/* Render the trajectory */}
+        {track.length >= 2 && <Polyline positions={track} pathOptions={{ color: "blue", weight: 4, opacity: 0.8 }} />}
+
+        {/* Render the latest known position */}
         <Marker position={center} icon={markerIcon} />
+
         <FollowCenter position={position} follow={follow} />
       </MapContainer>
     </div>

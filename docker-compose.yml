@@ -6,7 +6,7 @@ services:
     build: ./frontend/VACOP-app
     container_name: vacop_frontend
     ports:
-      - "80:80"  # Accessible via http://localhost
+      - "80:80" # Accessible via http://localhost
     depends_on:
       - backend
     networks:
@@ -34,12 +34,14 @@ services:
       - MQTT_USERNAME=test
       - MQTT_PASSWORD=test
       - MQTT_CLIENT_ID=vacop_backend
+      - DB_PATH=/app/instance/rtabmap_26_02_1.db
+    volumes:
+      - ./backend/instance:/app/instance
     depends_on:
       - db
       - mqtt
     networks:
       - vacop_net
-
 
   # 3. La Base de données (PostgreSQL)
   db:
@@ -66,6 +68,7 @@ services:
 
 networks:
   vacop_net:
+
 
 volumes:
   postgres_data:
