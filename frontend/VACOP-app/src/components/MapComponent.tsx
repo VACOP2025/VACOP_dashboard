@@ -20,17 +20,22 @@ interface MapInfo {
 }
 
 interface MapComponentProps {
-  onMapClick: (coords: MapCoordinates) => void;
+  onMapClick: (goal: MapCoordinates | null, initial: MapCoordinates | null) => void;
 }
 
 const MapComponent: React.FC<MapComponentProps> = ({ onMapClick }) => {
   const [mapInfo, setMapInfo] = useState<MapInfo | null>(null);
-  const [pinPosition, setPinPosition] = useState<{ x: number, y: number, yaw: number } | null>(null);
+
+  // Track both positions
+  const [goalPos, setGoalPos] = useState<{ x: number, y: number, yaw: number } | null>(null);
+  const [initialPos, setInitialPos] = useState<{ x: number, y: number, yaw: number } | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const imgRef = useRef<HTMLImageElement>(null);
   const isDragging = useRef(false);
+  const dragTarget = useRef<'goal' | 'initial' | null>(null); // Track which pin is being dragged
   const startDrag = useRef<{ x: number, y: number } | null>(null);
 
   useEffect(() => {
@@ -83,8 +88,31 @@ const MapComponent: React.FC<MapComponentProps> = ({ onMapClick }) => {
     return { x: 0.0, y: 0.0, z: sy, w: cy };
   };
 
+  const toMapCoords = (pos: { x: number, y: number, yaw: number }): MapCoordinates => ({
+    x: pos.x,
+    y: pos.y,
+    orientation: yawToQuaternion(pos.yaw),
+    yaw: pos.yaw
+  });
+
+  const updateParent = (goal: typeof goalPos, initial: typeof initialPos) => {
+    onMapClick(
+      goal ? toMapCoords(goal) : null,
+      initial ? toMapCoords(initial) : null
+    );
+  };
+
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mapInfo || !imgRef.current) return;
+
+    // Determine target based on button: 0 = Left (Goal), 2 = Right (Initial)
+    if (e.button === 0) {
+      dragTarget.current = 'goal';
+    } else if (e.button === 2) {
+      dragTarget.current = 'initial';
+    } else {
+      return;
+    }
 
     isDragging.current = true;
     startDrag.current = { x: e.clientX, y: e.clientY };
@@ -93,39 +121,39 @@ const MapComponent: React.FC<MapComponentProps> = ({ onMapClick }) => {
     const coords = getMapCoords(e.clientX, e.clientY, rect);
 
     if (coords) {
-      // Set initial position with 0 orientation
       const newPos = { x: coords.mapX, y: coords.mapY, yaw: 0 };
-      setPinPosition(newPos);
 
-      onMapClick({
-        x: newPos.x,
-        y: newPos.y,
-        orientation: yawToQuaternion(0),
-        yaw: 0
-      });
+      if (dragTarget.current === 'goal') {
+        setGoalPos(newPos);
+        updateParent(newPos, initialPos);
+      } else {
+        setInitialPos(newPos);
+        updateParent(goalPos, newPos);
+      }
     }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging.current || !startDrag.current || !pinPosition || !imgRef.current) return;
+    if (!isDragging.current || !startDrag.current || !dragTarget.current || !imgRef.current) return;
 
     // Calculate angle
     const dx = e.clientX - startDrag.current.x;
     const dy = e.clientY - startDrag.current.y;
     // Screen Y is down, Map Y is up. Visual angle on screen needs to be mapped to map angle.
-    // If I drag UP on screen (negative dy), that should be +Y on map.
-    // If I drag RIGHT on screen (positive dx), that should be +X on map.
     // So map_dx = dx, map_dy = -dy.
     const yaw = Math.atan2(-dy, dx);
 
-    setPinPosition(prev => prev ? { ...prev, yaw } : null);
-
-    if (pinPosition) {
-      onMapClick({
-        x: pinPosition.x,
-        y: pinPosition.y,
-        orientation: yawToQuaternion(yaw),
-        yaw: yaw
+    if (dragTarget.current === 'goal') {
+      setGoalPos(prev => {
+        const next = prev ? { ...prev, yaw } : null;
+        if (next) updateParent(next, initialPos);
+        return next;
+      });
+    } else {
+      setInitialPos(prev => {
+        const next = prev ? { ...prev, yaw } : null;
+        if (next) updateParent(goalPos, next);
+        return next;
       });
     }
   };
@@ -133,6 +161,40 @@ const MapComponent: React.FC<MapComponentProps> = ({ onMapClick }) => {
   const handleMouseUp = () => {
     isDragging.current = false;
     startDrag.current = null;
+    dragTarget.current = null;
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default browser context menu
+  };
+
+  const renderPin = (pos: { x: number, y: number, yaw: number }, color: 'red' | 'green') => {
+    if (!imgRef.current || !mapInfo) return null;
+
+    const realPx = (pos.x - mapInfo.origin_x) / mapInfo.resolution;
+    const realPy = mapInfo.height - (pos.y - mapInfo.origin_y) / mapInfo.resolution;
+
+    const leftPct = (realPx / mapInfo.width) * 100;
+    const topPct = (realPy / mapInfo.height) * 100;
+    const rotationDeg = -pos.yaw * (180 / Math.PI);
+
+    return (
+      <div
+        className="map-pin"
+        style={{
+          left: `${leftPct}%`,
+          top: `${topPct}%`,
+          transform: `translate(-50%, -50%) rotate(${-rotationDeg}deg)`,
+          position: 'absolute',
+          width: '20px',
+          height: '20px',
+          borderTop: '5px solid transparent',
+          borderBottom: '5px solid transparent',
+          borderLeft: `20px solid ${color}`,
+          pointerEvents: 'none' // Let clicks pass through to map
+        }}
+      />
+    );
   };
 
   if (loading) return <div className="map-placeholder">Chargement de la carte...</div>;
@@ -145,6 +207,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ onMapClick }) => {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onContextMenu={handleContextMenu}
       style={{ position: 'relative', display: 'inline-block', cursor: 'crosshair' }}
     >
       <img
@@ -155,47 +218,15 @@ const MapComponent: React.FC<MapComponentProps> = ({ onMapClick }) => {
         draggable={false}
       />
 
-      {pinPosition && imgRef.current && (() => {
-        // Convert map coords back to pixel percentage for display
-        // realPx = (x - origin_x) / res
-        // realPy = height - (y - origin_y) / res
-        const realPx = (pinPosition.x - mapInfo!.origin_x) / mapInfo!.resolution;
-        const realPy = mapInfo!.height - (pinPosition.y - mapInfo!.origin_y) / mapInfo!.resolution;
-
-        const leftPct = (realPx / mapInfo!.width) * 100;
-        const topPct = (realPy / mapInfo!.height) * 100;
-        const rotationDeg = -pinPosition.yaw * (180 / Math.PI); // DOM rotation is clockwise (?), Map yaw is CCW.
-        // Actually CSS rotate is CW. Yaw is usually CCW from X.
-        // Screen X is Right. Screen Y is Down.
-        // Atan2(-dy, dx): 0 is Right. 90 is (-dy=1) -> Up.
-        // So Yaw 90 deg -> pointing Up.
-        // CSS rotate 0 -> Right (if arrow points right).
-        // CSS rotate -90 -> Up.
-        // So css_angle = -yaw.
-
-        return (
-          <div
-            className="map-pin"
-            style={{
-              left: `${leftPct}%`,
-              top: `${topPct}%`,
-              transform: `translate(-50%, -50%) rotate(${-rotationDeg}deg)`,
-              position: 'absolute',
-              width: '20px',
-              height: '20px',
-              // Simple arrow
-              borderTop: '5px solid transparent',
-              borderBottom: '5px solid transparent',
-              borderLeft: '20px solid red'
-            }}
-          />
-        );
-      })()}
+      {goalPos && renderPin(goalPos, 'red')}
+      {initialPos && renderPin(initialPos, 'green')}
 
       <div className='map-info-overlay' style={{
         position: 'absolute', bottom: 5, right: 5, background: 'rgba(0,0,0,0.7)', color: 'white', padding: '5px', fontSize: '10px'
       }}>
-        {pinPosition ? `x: ${pinPosition.x.toFixed(2)}, y: ${pinPosition.y.toFixed(2)}, yaw: ${(pinPosition.yaw * 180 / Math.PI).toFixed(0)}°` : "Click to set goal"}
+        Left-click: Goal (Red) | Right-click: Initial (Green)
+        {goalPos && <div>Goal: x={goalPos.x.toFixed(2)} y={goalPos.y.toFixed(2)}</div>}
+        {initialPos && <div>Init: x={initialPos.x.toFixed(2)} y={initialPos.y.toFixed(2)}</div>}
       </div>
     </div>
   );
