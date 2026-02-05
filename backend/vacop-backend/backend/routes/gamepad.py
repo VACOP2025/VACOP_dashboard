@@ -31,10 +31,14 @@ def command_gamepad():
       # Extraire les axes (Stick gauche : 0 et 1)
       gamepad = data.get("gamepad", {})
       axes = gamepad.get("axes", [0, 0])
+
+      buttons = gamepad.get("buttons", [])
       
       # Calcul du vecteur (Inversion du Y pour la marche avant)
       steering = axes[0]
       throttle = -axes[1]
+
+      brake = not buttons[1].get("pressed", False) if len(buttons) > 1 else True
       
       # Deadzone 
       if abs(steering) < 0.1: steering = 0.0
@@ -44,7 +48,8 @@ def command_gamepad():
           "ts": data.get("ts"),
           "vector": {
               "throttle": round(throttle, 3),
-              "steering": round(steering, 3)
+              "steering": round(steering, 3),
+              "brake": brake 
           }
       }
       
