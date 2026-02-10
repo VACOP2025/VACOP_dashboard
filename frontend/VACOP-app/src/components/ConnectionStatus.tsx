@@ -1,65 +1,86 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaGamepad, FaWifi, FaSlash } from 'react-icons/fa';
-import './ConnectionStatus.css'; // Imports component-specific styles
+import './ConnectionStatus.css';
 
-/**
- * Defines the props accepted by the ConnectionStatus component.
- */
 interface ConnectionStatusProps {
-  /** The text label to display on the button. */
   label: string;
-  
-  /** Boolean state indicating if the device is connected. */
   isConnected: boolean;
-  
-  /** The type of device, used to determine which icon to display. */
   type: 'gamepad' | 'robot';
+  onStatusChange?: (nextConnected: boolean) => void;
+  endpointUrl?: string;
 }
 
-/**
- * A reusable UI component that displays the connection status
- * of a device (e.g., gamepad or robot).
- *
- * It renders a button with a dynamic icon and label,
- * and its visual style changes based on the 'isConnected' prop.
- *
- * @param {ConnectionStatusProps} props The component props.
- * @returns {React.ReactElement} The rendered status button.
- */
-const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ label, isConnected, type }) => {
-  
-  /**
-   * Determines the correct icon to display based on the component's props.
-   * @returns {React.ReactElement} The icon element.
-   */
+const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
+  label,
+  isConnected,
+  type,
+  onStatusChange,
+  endpointUrl = 'http://localhost:5000/command/robot/connection',
+}) => {
+  const isRobot = type === 'robot';
+  const [isSaving, setIsSaving] = useState(false);
+
+  // UI state (optimiste) synchronisé avec la prop
+  const [uiConnected, setUiConnected] = useState(isConnected);
+  useEffect(() => setUiConnected(isConnected), [isConnected]);
+
   const getIcon = (): React.ReactElement => {
-    // Select the base icon based on the 'type' prop.
-    const baseIcon = (type === 'gamepad') ? <FaGamepad /> : <FaWifi />;
-    
-    // If disconnected, wrap the icon in a container
-    // and overlay it with a 'FaSlash' icon.
-    if (!isConnected) {
+    const baseIcon = type === 'gamepad' ? <FaGamepad /> : <FaWifi />;
+    if (!uiConnected) {
       return (
-        <span className="icon-disconnected">
+        <span className="icon-disconnected" aria-hidden="true">
           {baseIcon}
           <FaSlash className="icon-slash" />
         </span>
       );
     }
-    
-    // If connected, return only the base icon.
-    return baseIcon;
+    return <span aria-hidden="true">{baseIcon}</span>;
   };
 
-  /**
-   * Renders the button.
-   * The CSS class is dynamically set to 'connected' or 'disconnected'
-   * based on the 'isConnected' prop, allowing for state-specific styling.
-   */
+  const handleClick = async () => {
+    if (!isRobot || isSaving) return;
+
+    const next = !uiConnected;
+
+    // Optimiste: on toggle direct
+    setUiConnected(next);
+
+    try {
+      setIsSaving(true);
+
+      const res = await fetch(endpointUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isConnected: next }),
+      });
+
+      const text = await res.text().catch(() => '');
+      if (!res.ok) throw new Error(`Backend ${res.status}: ${text || res.statusText}`);
+
+      // On informe le parent
+      onStatusChange?.(next);
+    } catch (err) {
+      console.error('Failed to update robot connection status:', err);
+      // rollback UI si erreur
+      setUiConnected(!next);
+      alert("Impossible d'envoyer la commande au backend.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
-    <button className={`status-button ${isConnected ? 'connected' : 'disconnected'}`}>
+    <button
+      type="button"
+      className={`status-button ${uiConnected ? 'connected' : 'disconnected'} ${
+        isRobot ? 'clickable' : 'not-clickable'
+      }`}
+      onClick={isRobot ? handleClick : undefined}
+      disabled={!isRobot || isSaving}
+      aria-label={`${label}: ${uiConnected ? 'connected' : 'disconnected'}`}
+    >
       {getIcon()}
-      <span>{label}</span>
+      <span>{isSaving ? 'Saving…' : label}</span>
     </button>
   );
 };

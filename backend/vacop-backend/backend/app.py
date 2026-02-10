@@ -9,9 +9,28 @@ from backend.routes.map import map_bp
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from backend.routes.robot import robot_bp
 
 # charge .env
-load_dotenv(Path(__file__).resolve().with_name(".env"))
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Cherche .env dans:
+# 1) backend/.env
+# 2) racine projet (../.env depuis backend/)
+_here = Path(__file__).resolve().parent
+candidates = [
+    _here / ".env",
+    _here.parent / ".env",
+]
+
+for p in candidates:
+    if p.exists():
+        load_dotenv(p)
+        print(f"[env] loaded: {p}")
+        break
+else:
+    print("[env] WARNING: no .env found in candidates:", candidates)
 
 
 def create_app():
@@ -26,6 +45,7 @@ def create_app():
     app.config["MQTT_PASSWORD"] = os.environ.get("MQTT_PASSWORD")
     app.config["MQTT_KEEPALIVE"] = 30
     app.config["MQTT_TLS_ENABLED"] = False
+    app.config["MQTT_PATH"] = os.getenv("MQTT_PATH", "").strip()
 
     db.init_app(app)
     jwt.init_app(app)
@@ -49,6 +69,7 @@ def create_app():
     app.register_blueprint(telemetry_bp)  
     app.register_blueprint(gamepad_bp)
     app.register_blueprint(map_bp)
+    app.register_blueprint(robot_bp)
 
     return app
 

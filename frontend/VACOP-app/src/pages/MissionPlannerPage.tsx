@@ -8,6 +8,7 @@ import MapComponent from '../components/MapComponent';
 import type { MapCoordinates } from '../components/MapComponent';
 import authService from '../services/authService';
 import './MissionPlannerPage.css'; // Import page-specific styles
+import { useRobotConnection } from '../state/robotConnection';
 
 /**
  * Renders the main mission planning page ("Choose Mission").
@@ -38,8 +39,7 @@ const MissionPlannerPage: React.FC = () => {
   const [isGamepadConnected, setGamepadConnected] = useState(false);
 
   /** Manages the robot connection state (placeholder). */
-  const [isRobotConnected, setRobotConnected] = useState(false);
-
+const { isRobotConnected, setRobotConnected } = useRobotConnection();
 
   // --- Event Handlers ---
 
@@ -196,18 +196,13 @@ const MissionPlannerPage: React.FC = () => {
           <Link to="/logs" target="_blank" className="btn btn-secondary">
             Logs
           </Link>
-          <Link
-            to="/connect"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ textDecoration: 'none' }}
-          >
-            <ConnectionStatus
-              label="Se connecter"
-              isConnected={isRobotConnected}
-              type="robot"
-            />
-          </Link>
+<ConnectionStatus
+  label="Robot"
+  type="robot"
+  isConnected={isRobotConnected}
+  onStatusChange={setRobotConnected}
+/>
+
           <button onClick={handleLogout} className="btn btn-danger">Logout</button>
         </div>
       </Header>

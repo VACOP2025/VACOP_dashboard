@@ -9,6 +9,7 @@ import './TeleoperationPage.css'; // Import component-specific styles
 import { useGamepadStatus } from "../hooks/useGamepadStatus";
 import { useGamepadDebug } from "../hooks/useGamepadDebug";
 import { useGamepadTransmit } from "../hooks/useGamepadTransmit";
+import { useRobotConnection } from '../state/robotConnection';
 
 /**
  * Renders the dashboard page for "Teleoperation" mode.
@@ -34,8 +35,8 @@ const TeleoperationPage: React.FC = () => {
   pollHz: 20,
 });
   // Manages the robot connection state (placeholder).
-  // Set to 'true' to match the mockup "Réseau 5G".
-  const [isRobotConnected, setRobotConnected] = useState(true);
+
+const { isRobotConnected, setRobotConnected } = useRobotConnection();
 
   
   /**
@@ -80,18 +81,14 @@ const TeleoperationPage: React.FC = () => {
         
         {/* Right Group: Status, Logs & Abandon */}
         <div className="header-group">
-          <Link 
-            to="/connect" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{textDecoration: 'none'}}
-          >
-            <ConnectionStatus 
-              label={isRobotConnected ? "Réseau 5G" : "Se connecter"} 
-              isConnected={isRobotConnected} 
-              type="robot" 
-            />
-          </Link>
+<ConnectionStatus
+  label="Robot"
+  type="robot"
+  isConnected={isRobotConnected}
+  onStatusChange={setRobotConnected}
+/>
+
+
           <Link to="/logs" target="_blank" className="btn btn-secondary">
             Logs
           </Link>
