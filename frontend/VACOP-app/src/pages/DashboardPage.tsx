@@ -75,11 +75,11 @@ const DashboardPage: React.FC = () => {
             rel="noopener noreferrer" 
             style={{textDecoration: 'none'}}
           >
-          <ConnectionStatus 
-            label={isGamepadConnected ? "Manette connectée" : "Manette déconnectée"}
-            isConnected={isGamepadConnected}
-            type="gamepad"
-          />
+            <ConnectionStatus 
+              label={isRobotConnected ? "Réseau 5G" : "Se connecter"} 
+              isConnected={isRobotConnected} 
+              type="robot" 
+            />
 
           </Link>
 
