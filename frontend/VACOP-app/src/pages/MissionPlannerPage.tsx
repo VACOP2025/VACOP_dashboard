@@ -25,6 +25,8 @@ const MissionPlannerPage: React.FC = () => {
 
   /** Manages the coordinates of the destination selected on the map. */
   const [destination, setDestination] = useState<MapCoordinates | null>(null);
+  /** Manages the coordinates of the initial pose selected on the map. */
+  const [initialPose, setInitialPose] = useState<MapCoordinates | null>(null);
 
   /** Stores the selected date for a deferred mission. */
   const [selectedDate, setSelectedDate] = useState('');
@@ -50,35 +52,50 @@ const MissionPlannerPage: React.FC = () => {
 
   /**
    * Callback for the MapComponent.
-   * Updates the 'destination' state when the operator clicks the map.
+   * Updates the respective state when the operator interacts with the map.
    *
-   * @param {MapCoordinates} coords - The (x, y) coordinates of the click.
+   * @param {MapCoordinates | null} goal - The goal coordinates.
+   * @param {MapCoordinates | null} initial - The initial coordinates.
    */
-  const handleMapClick = (coords: MapCoordinates) => {
-    console.log('New destination set:', coords);
-    setDestination(coords);
+  const handleMapClick = (goal: MapCoordinates | null, initial: MapCoordinates | null) => {
+    // Only update if changed to avoid unnecessary re-renders if logic inside MapComponent is chatty
+    if (goal) setDestination(goal);
+    if (initial) setInitialPose(initial);
+    console.log('Map update -> Goal:', goal, 'Initial:', initial);
   };
 
   /**
    * Handles immediate mission launch.
-   * Verifies a destination is selected before navigating
+   * Verifies destination and initial pose are selected before navigating
    * to the dashboard, replacing the navigation history.
    */
   const handleLaunchNow = async () => {
-    // Guard clause: check for destination.
+    // Guard clause: check for destination and initial pose.
     if (!destination) {
-      alert('Please select a destination on the map.');
+      alert('Please select a destination (Goal) on the map (Left Click).');
       return;
     }
-    console.log('Launching mission to:', destination);
+    if (!initialPose) {
+      alert('Please select an initial position on the map (Right Click).');
+      return;
+    }
+
+    console.log('Launching mission. Goal:', destination, 'Initial:', initialPose);
 
     // Construct the payload as requested
     const payload = {
-      pose: {
+      goal_pose: {
         header: { frame_id: 'map' },
         pose: {
           position: { x: destination.x, y: destination.y, z: 0.0 },
           orientation: destination.orientation || { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
+        }
+      },
+      initial_pose: {
+        header: { frame_id: 'map' },
+        pose: {
+          position: { x: initialPose.x, y: initialPose.y, z: 0.0 },
+          orientation: initialPose.orientation || { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
         }
       },
       behavior_tree: ''
@@ -94,11 +111,11 @@ const MissionPlannerPage: React.FC = () => {
           'Authorization': `Bearer ${authService.getCurrentUserToken()}`
         }
       });
-      alert("Mission launched (Goal published)!");
+      alert("Mission launched (Goal & Initial Pose published)!");
     } catch (err) {
       console.error("Failed to launch mission:", err);
       alert("Failed to launch mission. Check console.");
-      return; // customized behavior: don't navigate if failed? Or navigate anyway?
+      return;
     }
 
     // Replace current page in history to prevent "back" navigation
@@ -116,6 +133,10 @@ const MissionPlannerPage: React.FC = () => {
       alert('Please select a destination on the map.');
       return;
     }
+    if (!initialPose) {
+      alert('Please select an initial position on the map.');
+      return;
+    }
     // Guard clause: check for date and time.
     if (!selectedDate || !selectedTime) {
       alert('Please select a date and time.');
@@ -124,11 +145,20 @@ const MissionPlannerPage: React.FC = () => {
     console.log(`Mission planned for ${destination} at ${selectedDate} ${selectedTime}`);
     // ... logic to send to backend ...
 
-    // Replace current page in history to prevent "back" navigation
-    navigate('/dashboard', { replace: true });
+    // For now we might want to also trigger the launch or save it. 
+    // Assuming same behavior for now regarding MQTT publishing if "Planner" implies immediate backend notification,
+    // otherwise we just navigate.
+    // The requirement says "THose messages needs to be sent if the user presses launch mission or plan mission."
+    // So we should probably call the API here too or a similar one.
+
+    // Trigger launch logic for now as requested
+    handleLaunchNow();
   };
 
   // --- JSX Render ---
+
+  // Helper to determine status color
+  const isReady = destination && initialPose;
 
   return (
     <div className="page-container">
@@ -154,9 +184,9 @@ const MissionPlannerPage: React.FC = () => {
           <h1>Choisir mission</h1>
           {/* Indicateur de validité de la destination dans le header */}
           <button
-            className={`btn btn-status ${destination ? 'btn-green' : 'btn-red'}`}
+            className={`btn btn-status ${isReady ? 'btn-green' : 'btn-red'}`}
           >
-            {destination ? 'Destination OK' : 'Destination NOK'}
+            {isReady ? 'Prêt à lancer' : 'Positions manquantes'}
           </button>
         </div>
 

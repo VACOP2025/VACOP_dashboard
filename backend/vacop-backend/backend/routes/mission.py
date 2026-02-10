@@ -64,23 +64,31 @@ def get_logs():
 @mission_bp.route('/goal', methods=['POST'])
 def publish_goal():
     data = request.get_json()
-    # User requested specific structure validation could be done here, 
-    # but we will just pass it through to MQTT /goal topic.
     
-    # "pose: ..., behavior_tree: ''" is expected in 'data'
-    
-    # Publish to /goal
-    # mqtt_client.publish is not directly exposed but we can use the client object
-    # The user said "le backend publiera cela sur un topic mqtt qui s'apelle /goal"
-    
+    # Expected payload:
+    # {
+    #   "goal_pose": { ... },
+    #   "initial_pose": { ... },
+    #   "behavior_tree": "..."
+    # }
+
+    goal_pose = data.get('goal_pose')
+    initial_pose = data.get('initial_pose')
+
+    if not goal_pose or not initial_pose:
+        return jsonify({"msg": "Both goal_pose and initial_pose are required"}), 400
+
     try:
         from backend.services.mqtt_service import mqtt_client
         import json
         
-        # Ensure we publish exactly what is requested
-        # If the frontend sends the whole object, we send it.
-        mqtt_client.publish("/goal", json.dumps(data))
+        # Publish initial pose to /mission/initialpose
+        mqtt_client.publish("/mission/initialpose", json.dumps(initial_pose))
         
-        return jsonify({"msg": "Goal published"}), 200
+        # Publish goal pose to /mission/goal
+        # User requested: "publishing the goal position to /mission/goal"
+        mqtt_client.publish("/mission/goal", json.dumps(goal_pose))
+        
+        return jsonify({"msg": "Goal and Initial pose published"}), 200
     except Exception as e:
-        return jsonify({"msg": f"Failed to publish goal: {str(e)}"}), 500
+        return jsonify({"msg": f"Failed to publish mission info: {str(e)}"}), 500
