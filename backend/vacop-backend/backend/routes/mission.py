@@ -32,8 +32,14 @@ def start_mission():
     db.session.add(new_mission)
     db.session.commit()
 
+    mqtt_path = (current_app.config.get("MQTT_PATH") or "").strip()
+    topic = f"{mqtt_path.rstrip('/')}/mission"
+
+    if not mqtt_path:
+        return jsonify({"ok": False, "error": "MQTT_PATH is not set"}), 500
+
     payload = {"mission_id": new_mission.id, "destination": destination, "action": "start"}
-    mqtt_client.publish_command("mission", payload)
+    mqtt_client.publish(topic, payload)
 
     socketio.emit('mission_status', new_mission.to_dict())
     return jsonify(new_mission.to_dict()), 201
@@ -41,7 +47,9 @@ def start_mission():
 @mission_bp.route('/abort', methods=['POST'])
 @jwt_required()
 def abort_mission():
-    mqtt_client.publish_command("emergency", {"action": "STOP_IMMEDIATE"})
+    mqtt_path = (current_app.config.get("MQTT_PATH") or "").strip()
+    topic = f"{mqtt_path.rstrip('/')}/mission/abort"
+    mqtt_client.publish(topic, {"action": "STOP_IMMEDIATE"})
     active_mission = Mission.query.filter_by(status='active').first()
     if active_mission:
         active_mission.status = 'aborted'
@@ -74,6 +82,12 @@ def publish_goal():
 
     goal_pose = data.get('goal_pose')
     initial_pose = data.get('initial_pose')
+    mqtt_path = (current_app.config.get("MQTT_PATH") or "").strip()
+
+    if not mqtt_path:
+        return jsonify({"ok": False, "error": "MQTT_PATH is not set"}), 500
+    topicinitialpose = f"{mqtt_path.rstrip('/')}/mission/initialpose"
+    topicgoal = f"{mqtt_path.rstrip('/')}/mission/goal"
 
     if not goal_pose or not initial_pose:
         return jsonify({"msg": "Both goal_pose and initial_pose are required"}), 400
@@ -83,12 +97,17 @@ def publish_goal():
         import json
         
         # Publish initial pose to /mission/initialpose
-        mqtt_client.publish("/mission/initialpose", json.dumps(initial_pose))
+        mqtt_client.publish(topicinitialpose, json.dumps(initial_pose))
         
         # Publish goal pose to /mission/goal
         # User requested: "publishing the goal position to /mission/goal"
-        mqtt_client.publish("/mission/goal", json.dumps(goal_pose))
+        mqtt_client.publish(topicgoal, json.dumps(goal_pose))
         
         return jsonify({"msg": "Goal and Initial pose published"}), 200
     except Exception as e:
         return jsonify({"msg": f"Failed to publish mission info: {str(e)}"}), 500
+
+
+
+
+
