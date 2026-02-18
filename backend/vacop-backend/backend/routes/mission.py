@@ -1,9 +1,12 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt
 from backend.models import Mission, Log
 from backend.extensions import db, socketio
 from backend.services.mqtt_service import mqtt_client
 from datetime import datetime
+import os 
+import json
+
 
 mission_bp = Blueprint('mission', __name__, url_prefix='/vehicle')
 
