@@ -16,10 +16,12 @@ Chaque fichier définit un `Blueprint` Flask.
   - `POST /vehicle/mission` (JWT requis + rôle admin)
     - Body JSON : `{ "destination": <JSON> }`
     - Crée une mission DB + publie une commande MQTT (`mission`) + émet `mission_status` via Socket.IO.
+    - Topic MQTT : `${MQTT_PATH}/mission`
 
   - `POST /vehicle/abort` (JWT requis)
     - Publie une commande MQTT `emergency` (`STOP_IMMEDIATE`).
     - Marque la mission active comme `aborted` si trouvée.
+    - Topic MQTT : `${MQTT_PATH}/mission/abort`
 
   - `GET /vehicle/logs` (JWT requis)
     - Query : `level` (optionnel), `limit` (défaut 100)
@@ -27,6 +29,15 @@ Chaque fichier définit un `Blueprint` Flask.
 
   - `POST /vehicle/goal` (pas de JWT)
     - Forward le payload JSON vers MQTT sur le topic `/goal` (publication directe).
+    - Topics MQTT : `${MQTT_PATH}/mission/goal` et `${MQTT_PATH}/mission/initialpose`
+
+## Robot Connection
+
+- `robot.py` (`/command`)
+  - `POST /command/robot/connection`
+    - Notifie la connexion/déconnexion du robot.
+    - Payload JSON : `{ "isConnected": bool }`
+    - Topic MQTT : `${MQTT_PATH}/robot/connection`
 
 ## Telemetry
 

@@ -34,8 +34,9 @@ MQTT :
 - `MQTT_BROKER_URL`
 - `MQTT_BROKER_PORT`
 - `MQTT_USERNAME` / `MQTT_PASSWORD` (optionnels)
-- `MQTT_TOPIC` : topic GNSS (abonnement)
-- `MQTT_COMMAND_BASE` : préfixe des commandes MQTT (ex: `robot/command`)
+- `MQTT_TOPIC` : topic GNSS (abonnement) (défaut: `robot/gnss`, souvent préfixé par `MQTT_PATH` si configuré ailleurs, mais ici c'est une variable distincte).
+- `MQTT_COMMAND_BASE` : préfixe pour `publish_command` et gamepad (ex: `robot/command`).
+- `MQTT_PATH` : préfixe racine pour les missions et status robot (ex: `TestTopic/VACOP`). Utilisé par `mission.py`, `robot.py` pour construire `${MQTT_PATH}/mission`, `${MQTT_PATH}/robot/connection`, etc.
 
 Carte / RTAB-Map :
 - `DB_PATH` : chemin vers la DB RTAB-Map (sqlite) utilisée pour générer la carte occupancy grid.

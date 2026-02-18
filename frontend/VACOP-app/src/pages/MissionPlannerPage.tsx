@@ -39,7 +39,7 @@ const MissionPlannerPage: React.FC = () => {
   const [isGamepadConnected, setGamepadConnected] = useState(false);
 
   /** Manages the robot connection state (placeholder). */
-const { isRobotConnected, setRobotConnected } = useRobotConnection();
+  const { isRobotConnected, setRobotConnected } = useRobotConnection();
 
   // --- Event Handlers ---
 
@@ -103,7 +103,7 @@ const { isRobotConnected, setRobotConnected } = useRobotConnection();
 
     try {
       // Send to backend
-      await axios.post('http://localhost:5000/goal', payload, {
+      await axios.post('http://localhost:5000/vehicle/goal', payload, {
         headers: {
           // If auth is needed, usually we attach token. 
           // But existing code didn't show global axios interceptor.
@@ -196,12 +196,12 @@ const { isRobotConnected, setRobotConnected } = useRobotConnection();
           <Link to="/logs" target="_blank" className="btn btn-secondary">
             Logs
           </Link>
-<ConnectionStatus
-  label="Robot"
-  type="robot"
-  isConnected={isRobotConnected}
-  onStatusChange={setRobotConnected}
-/>
+          <ConnectionStatus
+            label="Robot"
+            type="robot"
+            isConnected={isRobotConnected}
+            onStatusChange={setRobotConnected}
+          />
 
           <button onClick={handleLogout} className="btn btn-danger">Logout</button>
         </div>

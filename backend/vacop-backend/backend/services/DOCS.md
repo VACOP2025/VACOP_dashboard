@@ -26,6 +26,7 @@
 
 - `publish_command(command, payload)` publie sur : `${MQTT_COMMAND_BASE}/{command}`
   - Défaut `MQTT_COMMAND_BASE = robot/command`
+  - Note : Les commandes spécifiques (`mission`, `robot/connection`) utilisent plutôt `MQTT_PATH` comme base.
 
 ## Cache telemetry : `telemetry_state.py`
 
