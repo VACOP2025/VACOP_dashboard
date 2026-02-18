@@ -55,17 +55,7 @@ L'architecture est construite sur **ROS2** et s'articule autour de trois pôles 
     * **Frontend (C1) :** Une interface web **React** sécurisée (HTTPS) permettant à l'opérateur de superviser et contrôler le véhicule.
     * **Protocoles :** HTTPS, WebSocket, WebRTC (pour la vidéo).
 
----
 
-## État du Projet
 
-**En cours de développement.**
 
-La structure de l'application frontend (React) est en place, incluant les pages de connexion, de planification de mission, de téléopération et de visualisation des logs. Le service d'authentification simulé permet le développement et le test de l'interface sans dépendance au backend.
-
-### Prochaines Étapes
-
-1.  Implémentation de la logique de communication WebSocket (côté client et serveur).
-2.  Connexion du backend aux flux de données ROS2 du véhicule (via MQTT).
-3.  Validation de la chaîne complète, de la sélection de mission sur l'IHM à l'exécution sur le véhicule réel.
 
