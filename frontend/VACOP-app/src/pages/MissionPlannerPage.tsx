@@ -103,7 +103,7 @@ const { isRobotConnected, setRobotConnected } = useRobotConnection();
 
     try {
       // Send to backend
-      await axios.post('http://localhost:5000/vehicle/goal', payload, {
+      await axios.post('http://localhost:5000/goal', payload, {
         headers: {
           // If auth is needed, usually we attach token. 
           // But existing code didn't show global axios interceptor.

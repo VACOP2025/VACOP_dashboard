@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 from backend.routes.robot import robot_bp
 
 # charge .env
-from dotenv import load_dotenv
 from pathlib import Path
 
 # Cherche .env dans:

@@ -82,7 +82,7 @@ def publish_goal():
 
     goal_pose = data.get('goal_pose')
     initial_pose = data.get('initial_pose')
-    mqtt_path = (current_app.config.get("MQTT_PATH") or "").strip()
+    mqtt_path = os.getenv("MQTT_PATH")
 
     if not mqtt_path:
         return jsonify({"ok": False, "error": "MQTT_PATH is not set"}), 500
